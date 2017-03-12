@@ -18,6 +18,12 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 	private ISocketController socketHandler;
 	private IWeightInterfaceController weightController;
 	private KeyState keyState = KeyState.K1;
+	
+	//input values
+	private double referenceWeight = 0;
+	private double weightInDisplay = 0;
+	private StringBuilder userInput = new StringBuilder();
+	
 
 	public MainController(ISocketController socketHandler, IWeightInterfaceController uiController) {
 		this.init(socketHandler, uiController);
@@ -26,7 +32,7 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 	@Override
 	public void init(ISocketController socketHandler, IWeightInterfaceController uiController) {
 		this.socketHandler = socketHandler;
-		this.weightController=uiController;
+		this.weightController = uiController;
 	}
 
 	@Override
@@ -36,8 +42,10 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 			socketHandler.registerObserver(this);
 			//Starts socketHandler in own thread
 			new Thread(socketHandler).start();
-			//TODO set up weightController - Look above for inspiration (Keep it simple ;))
-
+			//Makes this controller interested in messages from the weight
+			weightController.registerObserver(this);
+			//Starts weightController in own thread
+			new Thread(weightController).start();
 
 		} else {
 			System.err.println("No controllers injected!");
@@ -96,33 +104,41 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 	//Listening for UI input
 	@Override
 	public void notifyKeyPress(KeyPress keyPress) {
-		//TODO implement logic for handling input from ui
 		switch (keyPress.getType()) {
 		case SOFTBUTTON:
 			break;
 		case TARA:
+			referenceWeight = referenceWeight + weightInDisplay;
+			weightController.showMessagePrimaryDisplay("0.0 kg");
 			break;
 		case TEXT:
+			userInput.append(keyPress.getCharacter());
+			weightController.showMessageSecondaryDisplay(userInput.toString());
 			break;
 		case ZERO:
+			referenceWeight = 0;
+			weightController.showMessagePrimaryDisplay(referenceWeight + " kg");
 			break;
 		case C:
+			// c button is coded to function as a backspace, but the button isn't implemented in the GUI at the moment
+			userInput.deleteCharAt(userInput.length()-1);
+			weightController.showMessageSecondaryDisplay(userInput.toString());
 			break;
 		case EXIT:
+			System.exit(0);
 			break;
 		case SEND:
+			// TODO only case not done, what is this KeyState?
 			if (keyState.equals(KeyState.K4) || keyState.equals(KeyState.K3) ){
 				socketHandler.sendMessage(new SocketOutMessage("K A 3"));
 			}
 			break;
 		}
-
 	}
 
 	@Override
 	public void notifyWeightChange(double newWeight) {
-		// TODO Auto-generated method stub
-
+		weightController.showMessagePrimaryDisplay(newWeight - referenceWeight + " kg");
+		weightInDisplay = newWeight;
 	}
-
 }

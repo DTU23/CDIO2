@@ -30,10 +30,13 @@ public class SocketController implements ISocketController {
 
 	@Override
 	public void sendMessage(SocketOutMessage message) {
-		if (outStream!=null){
-			//TODO send something over the socket! 
-		} else {
+		try {
+			//TODO send something over the socket!
+			outStream.writeUTF(message.getMessage());
+		} catch (IOException e) {
 			//TODO maybe tell someone that connection is closed?
+			e.printStackTrace();
+			notifyObservers(new SocketInMessage(SocketMessageType.Error, "No socket is connected!"));
 		}
 	}
 
@@ -45,7 +48,7 @@ public class SocketController implements ISocketController {
 				waitForConnections(listeningSocket); 	
 			}		
 		} catch (IOException e1) {
-			// TODO Maybe notify MainController?
+			notifyObservers(new SocketInMessage(SocketMessageType.Error, "Could not establish connection to the cloud!"));
 			e1.printStackTrace();
 		} 
 
@@ -67,23 +70,37 @@ public class SocketController implements ISocketController {
 				if (inLine==null) break;
 				switch (inLine.split(" ")[0]) {
 				case "RM20": // Display a message in the secondary display and wait for response
+					notifyObservers(new SocketInMessage(SocketMessageType.RM208, inLine.substring(7)));
+					sendMessage(new SocketOutMessage("RM20 B"));
 					//TODO implement logic for RM command
 					break;
-				case "D":// Display a message in the primary display
-					//TODO Refactor to make sure that faulty messages doesn't break the system
-					notifyObservers(new SocketInMessage(SocketMessageType.D, inLine.split(" ")[1])); 			
+				case "D": // Display a message in the primary display
+					try {
+						notifyObservers(new SocketInMessage(SocketMessageType.D, inLine.substring(2)));
+						sendMessage(new SocketOutMessage("D A"));
+					} catch (IndexOutOfBoundsException e) {
+						e.printStackTrace();
+						sendMessage(new SocketOutMessage("ES"));
+					}
 					break;
 				case "DW": //Clear primary display
-					//TODO implement
+					notifyObservers(new SocketInMessage(SocketMessageType.DW, null));
+					sendMessage(new SocketOutMessage("DW A"));
 					break;
 				case "P111": //Show something in secondary display
-					//TODO implement
+					try {
+						notifyObservers(new SocketInMessage(SocketMessageType.P111, inLine.substring(5)));
+						sendMessage(new SocketOutMessage("P111 A"));
+					} catch (IndexOutOfBoundsException e) {
+						e.printStackTrace();
+						sendMessage(new SocketOutMessage("ES"));
+					}
 					break;
 				case "T": // Tare the weight
-					//TODO implement
+					notifyObservers(new SocketInMessage(SocketMessageType.T, null));
 					break;
 				case "S": // Request the current load
-					//TODO implement
+					notifyObservers(new SocketInMessage(SocketMessageType.S, null));
 					break;
 				case "K":
 					if (inLine.split(" ").length>1){
@@ -91,18 +108,24 @@ public class SocketController implements ISocketController {
 					}
 					break;
 				case "B": // Set the load
-					//TODO implement
+					try {
+						notifyObservers(new SocketInMessage(SocketMessageType.B, inLine.substring(2)));
+						sendMessage(new SocketOutMessage("DB"));
+					} catch (IndexOutOfBoundsException e) {
+						e.printStackTrace();
+						sendMessage(new SocketOutMessage("ES"));
+					}
 					break;
 				case "Q": // Quit
-					//TODO implement
+					notifyObservers(new SocketInMessage(SocketMessageType.Q, null));
 					break;
 				default: //Something went wrong?
-					//TODO implement
+					sendMessage(new SocketOutMessage("ES"));
 					break;
 				}
 			}
 		} catch (IOException e) {
-			//TODO maybe notify mainController?
+			notifyObservers(new SocketInMessage(SocketMessageType.Error, "Problems with internet connection"));
 			e.printStackTrace();
 		}
 	}

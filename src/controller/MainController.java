@@ -1,5 +1,7 @@
 package controller;
 
+import java.text.DecimalFormat;
+
 import socket.ISocketController;
 import socket.ISocketObserver;
 import socket.SocketInMessage;
@@ -21,7 +23,7 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 	
 	//input values
 	private double referenceWeight = 0;
-	private double weightInDisplay = 0;
+	private double weightOnSlider = 0;
 	private StringBuilder userInput = new StringBuilder();
 	
 
@@ -57,26 +59,45 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 	public void notify(SocketInMessage message) {
 		switch (message.getType()) {
 		case B:
+			try {
+				notifyWeightChange(Double.parseDouble(message.getMessage()));
+			} catch (Exception e) {
+				e.printStackTrace();
+				socketHandler.sendMessage(new SocketOutMessage("ES"));
+			}
 			break;
 		case D:
 			weightController.showMessagePrimaryDisplay(message.getMessage()); 
 			break;
 		case Q:
+			System.exit(0);
 			break;
 		case RM204:
+			//TODO Not implemented yet
 			break;
 		case RM208:
+			weightController.showMessagePrimaryDisplay("TODO");
+			//TODO Ask for guidance on implementation
 			break;
 		case S:
+			socketHandler.sendMessage(new SocketOutMessage("S S      " + new DecimalFormat("#.###").format(weightOnSlider-referenceWeight) + " kg"));
 			break;
 		case T:
+			referenceWeight = weightOnSlider;
+			weightController.showMessagePrimaryDisplay("0.0 kg");
+			socketHandler.sendMessage(new SocketOutMessage("T S      " + new DecimalFormat("#.###").format(referenceWeight) + " kg"));
 			break;
 		case DW:
+			weightController.showMessagePrimaryDisplay(referenceWeight + " kg");
 			break;
 		case K:
 			handleKMessage(message);
 			break;
 		case P111:
+			weightController.showMessagePrimaryDisplay(message.getMessage());
+			break;
+		default:
+			weightController.showMessagePrimaryDisplay(message.getMessage()); 
 			break;
 		}
 
@@ -108,7 +129,7 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 		case SOFTBUTTON:
 			break;
 		case TARA:
-			referenceWeight = referenceWeight + weightInDisplay;
+			referenceWeight = weightOnSlider;
 			weightController.showMessagePrimaryDisplay("0.0 kg");
 			break;
 		case TEXT:
@@ -139,6 +160,6 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 	@Override
 	public void notifyWeightChange(double newWeight) {
 		weightController.showMessagePrimaryDisplay(newWeight - referenceWeight + " kg");
-		weightInDisplay = newWeight;
+		weightOnSlider = newWeight;
 	}
 }

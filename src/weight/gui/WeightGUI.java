@@ -64,23 +64,23 @@ public class WeightGUI implements IWeightInterfaceController {
 			o.notifyWeightChange(newValue / 1000);
 		}
 	}
-	void onExitButtonPressed() {
+	public void onExitButtonPressed() {
 		for (IWeightInterfaceObserver o : observers) {
 			o.notifyKeyPress(KeyPress.Exit());
 		}
 	}
-	void onZeroButtonPressed() {
+	public void onZeroButtonPressed() {
 		for (IWeightInterfaceObserver o : observers) {
 			o.notifyKeyPress(KeyPress.Zero());
 		}
 	}
-	void onTaraButtonPressed() {
+	public void onTaraButtonPressed() {
 		for (IWeightInterfaceObserver o : observers) {
 			o.notifyKeyPress(KeyPress.Tara());
 		}
 		
 	}
-	void onSendButtonPressed() {
+	public void onSendButtonPressed() {
 		for (IWeightInterfaceObserver o : observers) {
 			o.notifyKeyPress(KeyPress.Send());
 		}
@@ -95,29 +95,9 @@ public class WeightGUI implements IWeightInterfaceController {
 			o.notifyKeyPress(KeyPress.SoftButton(i));
 		}
 	}
-	
-	
-	
-	
-	
-	
-	
-
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
+	public void onClearButtonPressed() {
+		for (IWeightInterfaceObserver o : observers) {
+			o.notifyKeyPress(KeyPress.Clear());
+		}
+	}
 }

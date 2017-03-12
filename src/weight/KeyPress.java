@@ -25,6 +25,10 @@ public class KeyPress {
 	public static KeyPress Send(){
 		return new KeyPress(0,'\\', KeyPressType.SEND);
 	}
+
+	public static KeyPress Clear() {
+		return new KeyPress(0,'\\', KeyPressType.C);
+	}
 	
 	public static KeyPress SoftButton(int number){
 		return new KeyPress(number, '\\', KeyPressType.SOFTBUTTON);

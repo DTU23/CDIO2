@@ -18,7 +18,51 @@ public class WeightingProcess implements Runnable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		socketController.sendCommand("RM20 8");
+		try {
+			
+			// Hvilken kommando kvitterer? Skal nextResponse køres så mange gange, eller vil man få alt input ved at køre det en gang? 
+			
+			socketController.nextResponse(); //RM20	8	"INDTAST	NR"	""	"&3"cr	lf
+			socketController.sendCommand("23");
+			socketController.nextResponse(); // RM20 B
+			socketController.nextResponse(); // RM20 A "23"
+			socketController.sendCommand("OK");																
+			socketController.nextResponse(); //RM20	8	"BATCH	NR"	""	"&3" cr lf
+			socketController.nextResponse();
+			socketController.sendCommand("2323"); 
+			socketController.nextResponse(); // RM20 B
+			socketController.nextResponse(); // RM20 A
+			socketController.sendCommand("OK");
+			socketController.nextResponse(); // T
+			socketController.nextResponse(); // P111 "PLACER TARA"
+			socketController.nextResponse(); // P111 A 
+			socketController.sendCommand("OK");
+			socketController.nextResponse(); // S
+			socketController.nextResponse(); // S S n kg
+			socketController.nextResponse(); // T
+			socketController.nextResponse(); // T S n kg 
+			socketController.nextResponse(); // P111 "NETTO"
+			socketController.nextResponse(); // P111 A
+			socketController.sendCommand("OK");
+			socketController.nextResponse(); // S
+			socketController.nextResponse(); // S S x kg
+			socketController.nextResponse(); // T
+			socketController.nextResponse(); // T S x kg 
+			socketController.nextResponse(); // P111 "FJERN"
+			socketController.nextResponse(); // P111 A
+			socketController.nextResponse(); // S
+			socketController.nextResponse(); // S S -x kg
+			socketController.nextResponse(); // P111 "AFV OK"
+			socketController.nextResponse(); // P111 A
+			socketController.sendCommand("OK");
+
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
 		
 	}
 	

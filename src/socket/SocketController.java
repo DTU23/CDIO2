@@ -106,6 +106,7 @@ public class SocketController implements ISocketController {
 				case "K":
 					if (inLine.split(" ").length>1){
 						notifyObservers(new SocketInMessage(SocketMessageType.K, inLine.split(" ")[1]));
+						//TODO skal evt. være index 2, afhængigt af om kommandoen er "K C x".
 					}
 					break;
 				case "B": // Set the load

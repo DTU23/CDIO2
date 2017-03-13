@@ -20,6 +20,7 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 	private ISocketController socketHandler;
 	private IWeightInterfaceController weightController;
 	private KeyState keyState = KeyState.K1;
+	private boolean RM20awaitingResponse = false;
 
 	//input values
 	private double referenceWeight = 0;
@@ -76,8 +77,8 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 			//TODO Not implemented yet
 			break;
 		case RM208:
-			weightController.showMessageSecondaryDisplay("TODO");
-			//TODO Ask for guidance on implementation
+			weightController.showMessagePrimaryDisplay(message.getMessage());
+			RM20awaitingResponse = true;
 			break;
 		case S:
 			socketHandler.sendMessage(new SocketOutMessage("S S      " + new DecimalFormat("#.###").format(weightOnSlider-referenceWeight) + " kg"));
@@ -92,16 +93,16 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 			break;
 		case K:
 			if(handleKMessage(message)) {
-				socketHandler.sendMessage(new SocketOutMessage("K A " + message.getMessage()));
+				socketHandler.sendMessage(new SocketOutMessage("K A"));
 			} else {
 				socketHandler.sendMessage(new SocketOutMessage("ES"));
 			}
 			break;
 		case P111:
-			weightController.showMessagePrimaryDisplay(message.getMessage());
+			weightController.showMessageSecondaryDisplay(message.getMessage());
 			break;
 		default:
-			weightController.showMessagePrimaryDisplay(message.getMessage()); 
+			weightController.showMessageSecondaryDisplay(message.getMessage()); 
 			break;
 		}
 
@@ -132,20 +133,25 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 		case SOFTBUTTON:
 			break;
 		case TARA:
-
-			referenceWeight = weightOnSlider;
-			weightController.showMessagePrimaryDisplay("0.0 kg");
+			// if in KeyState 1 or 4 the button will work
+			if(keyState.equals(KeyState.K1) || keyState.equals(KeyState.K4)) {
+				referenceWeight = weightOnSlider;
+				weightController.showMessagePrimaryDisplay("0.0 kg");
+			}
 			break;
 		case TEXT:
 			userInput.append(keyPress.getCharacter());
 			weightController.showMessageSecondaryDisplay(userInput.toString());
 			break;
 		case ZERO:
-			referenceWeight = 0;
-			weightController.showMessagePrimaryDisplay(referenceWeight + " kg");
+			// if in KeyState 1 or 4 the button will work
+			if(keyState.equals(KeyState.K1) || keyState.equals(KeyState.K4)) {
+				referenceWeight = 0;
+				weightController.showMessagePrimaryDisplay(referenceWeight + " kg");
+			}
 			break;
 		case C:
-			// c button is coded to function as a backspace, but the button isn't implemented in the GUI at the moment
+			// c button is coded to function as a backspace
 			userInput.deleteCharAt(userInput.length()-1);
 			weightController.showMessageSecondaryDisplay(userInput.toString());
 			break;
@@ -153,8 +159,15 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 			System.exit(0);
 			break;
 		case SEND:
-			if (keyState.equals(KeyState.K4) || keyState.equals(KeyState.K3) ){
+			if(RM20awaitingResponse) {
+				socketHandler.sendMessage(new SocketOutMessage("RM20 A " + userInput.toString()));
+				userInput.setLength(0);
+				weightController.showMessageSecondaryDisplay(userInput.toString());
+				RM20awaitingResponse = false;
+			} else if (keyState.equals(KeyState.K3)) {
 				socketHandler.sendMessage(new SocketOutMessage("K A 3"));
+			} else if(keyState.equals(KeyState.K4)) {
+				socketHandler.sendMessage(new SocketOutMessage("K A 4"));
 			}
 			break;
 		}

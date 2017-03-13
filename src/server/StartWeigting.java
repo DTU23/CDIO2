@@ -1,11 +1,15 @@
 package server;
 
+/**
+ * Method to start the weighting procedure
+ */
 public class StartWeigting implements Runnable{
     private Socket socket;
-    private float tara;
     private int batchNumber;
+    private float tara;
     private float brutto;
     private float netto;
+
     @Override
     public void run() {
         this.socket = new Socket();
@@ -34,7 +38,9 @@ public class StartWeigting implements Runnable{
     }
     public float getWeight(){
         socket.sendCmd("S crlf");
-        weight = getWeightAsFloat();
+        tmp = socket.receiveResponse();
+        tmp = tmp.substring(tmp.lastIndexOf('S '));
+        weight = Float.parseFloat(tmp.split(' kgs')[0]);
         socket.sendCmd("T crlf");
         return weight;
     }

@@ -26,7 +26,7 @@ public class FxApp extends Application {
 	private Text[] txtinfo = new Text[4];
 	private TextField userInput;
 	private Slider slider;
-	private Button btnexit, btnzero, btntara, btnsend, btnshift; 
+	private Button btnexit, btnzero, btntara, btnsend, btnClear, btnshift; 
 	private Button[] btnsft = new Button[6];
 	private Button[] btnnum = new Button[10];
 	public static final String[] str_lower = {".", "abc", "def", "ghi", "jkl", "mno", "pqr", "stu", "vxy", "z"};
@@ -128,6 +128,11 @@ public class FxApp extends Application {
 				@Override public void handle(ActionEvent event) { onSendButtonPressed(); }
 			});
 			
+			btnClear = (Button) loader.getNamespace().get("btncancel");
+			btnClear.setOnAction(new EventHandler<ActionEvent>() { 
+				@Override public void handle(ActionEvent event) { onClearButtonPressed(); }
+			});
+			
 			final FxAppInputBtnHandler inputHandler = new FxAppInputBtnHandler();
 			for(int i=0; i < 10; i++){
 				final int btn = i;
@@ -167,6 +172,7 @@ public class FxApp extends Application {
 	private void onZeroButtonPressed(){ l.onZeroButtonPressed(); }
 	private void onTaraButtonPressed(){ l.onTaraButtonPressed(); }
 	private void onSendButtonPressed(){ l.onSendButtonPressed(); }
+	private void onClearButtonPressed(){ l.onClearButtonPressed(); }
 	private void onNumBtnPressed(final FxAppInputBtnHandler inputHandler, final int btn) {
 		char c = inputHandler.onButtonPressed(btn, inputType, DELAY);
 		if(timer == null) timer = new Timer();

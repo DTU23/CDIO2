@@ -2,22 +2,31 @@ package webServer;
 
 import java.net.*;
 import java.io.*;
-import java.io.*;
+
 public class SocketController {
+	
+private Socket clientSocket; 
+private BufferedReader input;
+private DataOutputStream output;
 
 
-	public void connectToServer(String IP, int PORT) throws IOException {
-		Socket clientSocket = new Socket(IP, PORT);
+	public SocketController(String IP, int PORT) throws IOException {
+		clientSocket = new Socket(IP, PORT);
+		new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); 
+		new DataOutputStream(clientSocket.getOutputStream());
+	}
+	
+
+	public void sendCommand(String command) throws IOException{
+		output.writeBytes(command);
+		output.flush();
+		System.out.println("Bruger sendte kommandoen: " + command);
+		
+	}
+	
+	public String nextResponse() throws IOException {
+		return input.readLine();
 	}
 
-	public String sendCMD(String cmd){
-		BufferedReader inFromUser =
-				new BufferedReader(new InputStreamReader(System.in)); 
-		DataOutputStream outToServer =
-				new DataOutputStream(clientSocket.getOutputStream());
-		cmd = inFromUser.readLine();
-		outToServer.writeBytes(cmd + '\n');
-	}
 
-	public notify(Ctrl, ctrl)
 }

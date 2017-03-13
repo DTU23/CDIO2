@@ -1,14 +1,40 @@
 package webServer;
 
+import java.io.IOException;
+
 /**
  * Method to start the weighting procedure
  */
+
+public class WeightingProcess implements Runnable {
+
+	SocketController socketController;
+
+	@Override
+	public void run() {
+		try {
+			socketController = new SocketController("localhost", 8000);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		socketController.sendCommand("RM20 8");
+		
+	}
+	
+	
+	
+	
+}
+
+/**
 public class WeightingProcess implements Runnable{
     private Socket socket;
     private int batchNumber;
     private float tara;
     private float brutto;
     private float netto;
+
 
     @Override
     public void run() {
@@ -45,3 +71,4 @@ public class WeightingProcess implements Runnable{
         return weight;
     }
 }
+**/

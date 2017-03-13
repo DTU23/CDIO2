@@ -20,12 +20,12 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 	private ISocketController socketHandler;
 	private IWeightInterfaceController weightController;
 	private KeyState keyState = KeyState.K1;
-	
+
 	//input values
 	private double referenceWeight = 0;
 	private double weightOnSlider = 0;
 	private StringBuilder userInput = new StringBuilder();
-	
+
 
 	public MainController(ISocketController socketHandler, IWeightInterfaceController uiController) {
 		this.init(socketHandler, uiController);
@@ -76,7 +76,7 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 			//TODO Not implemented yet
 			break;
 		case RM208:
-			weightController.showMessagePrimaryDisplay("TODO");
+			weightController.showMessageSecondaryDisplay("TODO");
 			//TODO Ask for guidance on implementation
 			break;
 		case S:
@@ -91,7 +91,11 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 			weightController.showMessagePrimaryDisplay(referenceWeight + " kg");
 			break;
 		case K:
-			handleKMessage(message);
+			if(handleKMessage(message)) {
+				socketHandler.sendMessage(new SocketOutMessage("K A " + message.getMessage()));
+			} else {
+				socketHandler.sendMessage(new SocketOutMessage("ES"));
+			}
 			break;
 		case P111:
 			weightController.showMessagePrimaryDisplay(message.getMessage());
@@ -103,23 +107,22 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 
 	}
 
-	private void handleKMessage(SocketInMessage message) {
+	private boolean handleKMessage(SocketInMessage message) {
 		switch (message.getMessage()) {
 		case "1" :
 			this.keyState = KeyState.K1;
-			break;
+			return true;
 		case "2" :
 			this.keyState = KeyState.K2;
-			break;
+			return true;
 		case "3" :
 			this.keyState = KeyState.K3;
-			break;
+			return true;
 		case "4" :
 			this.keyState = KeyState.K4;
-			break;
+			return true;
 		default:
-			socketHandler.sendMessage(new SocketOutMessage("ES"));
-			break;
+			return false;
 		}
 	}
 	//Listening for UI input
@@ -129,6 +132,7 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 		case SOFTBUTTON:
 			break;
 		case TARA:
+
 			referenceWeight = weightOnSlider;
 			weightController.showMessagePrimaryDisplay("0.0 kg");
 			break;
@@ -149,7 +153,6 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 			System.exit(0);
 			break;
 		case SEND:
-			// TODO only case not done, what is this KeyState?
 			if (keyState.equals(KeyState.K4) || keyState.equals(KeyState.K3) ){
 				socketHandler.sendMessage(new SocketOutMessage("K A 3"));
 			}

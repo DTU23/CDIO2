@@ -1,9 +1,9 @@
-package socket;
+package webServer;
 
 import java.net.*;
 import java.io.*;
 import java.io.*;
-public class SocketProgram {
+public class SocketController {
 
 
 	public void connectToServer(String IP, int PORT) throws IOException {

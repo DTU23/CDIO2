@@ -32,7 +32,8 @@ public class SocketController implements ISocketController {
 	public void sendMessage(SocketOutMessage message) {
 		try {
 			//TODO send something over the socket!
-			outStream.writeUTF(message.getMessage());
+			outStream.writeBytes(message.getMessage() + "\r\n");
+			outStream.flush();
 		} catch (IOException e) {
 			//TODO maybe tell someone that connection is closed?
 			e.printStackTrace();

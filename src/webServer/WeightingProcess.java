@@ -1,9 +1,9 @@
-package server;
+package webServer;
 
 /**
  * Method to start the weighting procedure
  */
-public class StartWeigting implements Runnable{
+public class WeightingProcess implements Runnable{
     private Socket socket;
     private int batchNumber;
     private float tara;

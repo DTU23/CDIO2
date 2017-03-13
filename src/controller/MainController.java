@@ -160,7 +160,7 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 			break;
 		case SEND:
 			if(RM20awaitingResponse) {
-				socketHandler.sendMessage(new SocketOutMessage("RM20 A " + userInput.toString()));
+				socketHandler.sendMessage(new SocketOutMessage("RM20 A \"" + userInput.toString() + "\""));
 				userInput.setLength(0);
 				weightController.showMessageSecondaryDisplay(userInput.toString());
 				RM20awaitingResponse = false;

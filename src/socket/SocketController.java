@@ -71,7 +71,7 @@ public class SocketController implements ISocketController {
 				if (inLine==null) break;
 				switch (inLine.split(" ")[0]) {
 				case "RM20": // Display a message in the secondary display and wait for response
-					notifyObservers(new SocketInMessage(SocketMessageType.RM208, inLine.substring(7)));
+					notifyObservers(new SocketInMessage(SocketMessageType.RM208, inLine.substring(8)));
 					sendMessage(new SocketOutMessage("RM20 B"));
 					//TODO implement logic for RM command
 					break;

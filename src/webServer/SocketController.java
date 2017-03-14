@@ -9,13 +9,11 @@ public class SocketController {
 	private BufferedReader input;
 	private DataOutputStream output;
 
-
 	public SocketController(String IP, int PORT) throws IOException {
 		clientSocket = new Socket(IP, PORT);
-		new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); 
-		new DataOutputStream(clientSocket.getOutputStream());
+		input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); 
+		output = new DataOutputStream(clientSocket.getOutputStream());
 	}
-
 
 	public void sendCommand(String command) throws IOException{
 		output.writeBytes(command + "\r\n");
@@ -31,6 +29,4 @@ public class SocketController {
 		}
 		return nextLine;
 	}
-
-
 }

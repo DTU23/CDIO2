@@ -10,6 +10,8 @@ import java.util.concurrent.TimeUnit;
 public class WeightingProcess {
 
 	SocketController socketController;
+	double tara, netto, brutto;
+	String response;
 
 	public void run() {
 		try {
@@ -20,6 +22,8 @@ public class WeightingProcess {
 			System.exit(1);
 		}
 		try {
+			socketController.sendCommand("K 3");
+			waitResponse();
 			socketController.sendCommand("RM20 8 \"Opr Nr?\" \"\" \"&3\"");
 			waitResponse();
 			waitResponse();
@@ -40,29 +44,36 @@ public class WeightingProcess {
 			waitResponse();
 			waitResponse();
 			socketController.sendCommand("S");
-			waitResponse();
+			response = waitResponse();
+			tara = Double.parseDouble(response.split(" ")[7].replace(',', '.'));
 			socketController.sendCommand("T");
 			waitResponse();
 			socketController.sendCommand("P111 \"Placer netto [->\"");
 			waitResponse();
 			waitResponse();
 			socketController.sendCommand("S");
-			waitResponse();
+			response = waitResponse();
+			netto = Double.parseDouble(response.split(" ")[7].replace(',', '.'));
 			socketController.sendCommand("T");
 			waitResponse();
 			socketController.sendCommand("P111 \"Fjern brutto [->\"");
 			waitResponse();
 			waitResponse();
 			socketController.sendCommand("S");
-			waitResponse();
-			socketController.sendCommand("P111 \"Afvejning ok? [->\"");
-			waitResponse();
-			waitResponse();
+			response = waitResponse();
+			brutto = Double.parseDouble(response.split(" ")[7].replace(',', '.'));
+			if(tara + netto + brutto == 0) {
+				socketController.sendCommand("P111 \"Afvejning ok");
+				waitResponse();
+			} else {
+				socketController.sendCommand("P111 \"Afvejning ikke ok");
+				waitResponse();
+			}
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private String waitResponse() throws IOException, InterruptedException {
 		String response = socketController.nextResponse();
 		while(response == null) {

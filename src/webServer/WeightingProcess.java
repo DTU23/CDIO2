@@ -1,74 +1,85 @@
 package webServer;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Method to start the weighting procedure
  */
 
-public class WeightingProcess implements Runnable {
+public class WeightingProcess {
 
 	SocketController socketController;
+	double tara, netto, brutto;
+	String response;
 
-	@Override
 	public void run() {
 		try {
 			socketController = new SocketController("localhost", 8000);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			System.out.println("Connection couldn't be established!");
+			e.printStackTrace();
+			System.exit(1);
+		}
+		try {
+			socketController.sendCommand("K 3");
+			waitResponse();
+			socketController.sendCommand("RM20 8 \"Opr Nr?\" \"\" \"&3\"");
+			waitResponse();
+			waitResponse();
+			socketController.sendCommand("P111 \"Anders And [->\"");
+			waitResponse();
+			waitResponse();
+			socketController.sendCommand("RM20 8 \"Batch?\" \"\" \"&3\"");
+			waitResponse();
+			waitResponse();
+			socketController.sendCommand("P111 \"Salt [->\"");
+			waitResponse();
+			waitResponse();
+			socketController.sendCommand("P111 \"\"");
+			waitResponse();
+			socketController.sendCommand("T");
+			waitResponse();
+			socketController.sendCommand("P111 \"Placer tara [->\"");
+			waitResponse();
+			waitResponse();
+			socketController.sendCommand("S");
+			response = waitResponse();
+			tara = Double.parseDouble(response.split(" ")[7].replace(',', '.'));
+			socketController.sendCommand("T");
+			waitResponse();
+			socketController.sendCommand("P111 \"Placer netto [->\"");
+			waitResponse();
+			waitResponse();
+			socketController.sendCommand("S");
+			response = waitResponse();
+			netto = Double.parseDouble(response.split(" ")[7].replace(',', '.'));
+			socketController.sendCommand("T");
+			waitResponse();
+			socketController.sendCommand("P111 \"Fjern brutto [->\"");
+			waitResponse();
+			waitResponse();
+			socketController.sendCommand("S");
+			response = waitResponse();
+			brutto = Double.parseDouble(response.split(" ")[7].replace(',', '.'));
+			if(tara + netto + brutto == 0) {
+				socketController.sendCommand("P111 \"Afvejning ok");
+				waitResponse();
+			} else {
+				socketController.sendCommand("P111 \"Afvejning ikke ok");
+				waitResponse();
+			}
+		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
 		}
-		socketController.sendCommand("RM20 8");
-		
 	}
-	
-	
-	
-	
+
+	private String waitResponse() throws IOException, InterruptedException {
+		String response = socketController.nextResponse();
+		while(response == null) {
+			TimeUnit.MILLISECONDS.sleep(1);
+			response = socketController.nextResponse();
+		}
+		return response;
+	}
 }
-
-/**
-public class WeightingProcess implements Runnable{
-    private Socket socket;
-    private int batchNumber;
-    private float tara;
-    private float brutto;
-    private float netto;
-
-
-    @Override
-    public void run() {
-        this.socket = new Socket();
-        // TODO: Implements getting usernumber later
-        this.batchNumber = getResponse("Batch nr.");
-        inform("Place Tara");
-        awaitConfirm();
-        this.tara = getWeight();
-        inform("Place Netto");
-        awaitConfirm();
-        this.netto = getWeight();
-        inform("Remove prod");
-        awaitConfirm();
-        this.brutto = getWeight();
-        inform("ok");
-    }
-
-    public string getResponse(String message){
-        socket.sendCmd("RM20 \""+message+"\"crlf");
-    }
-    public void inform(String message){
-        socket.sendCmd("P111 \""+message+"\"crlf");
-    }
-    public void awaitConfirm(){
-        socket.receiveResponse();
-    }
-    public float getWeight(){
-        socket.sendCmd("S crlf");
-        tmp = socket.receiveResponse();
-        tmp = tmp.substring(tmp.lastIndexOf('S '));
-        weight = Float.parseFloat(tmp.split(' kgs')[0]);
-        socket.sendCmd("T crlf");
-        return weight;
-    }
-}
-**/

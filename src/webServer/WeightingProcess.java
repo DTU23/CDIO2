@@ -13,6 +13,7 @@ public class WeightingProcess {
 	double tara, netto, brutto;
 	String response;
 
+	// Connects to the server on localhost and port 8000
 	public void run() {
 		try {
 			socketController = new SocketController("localhost", 8000);
@@ -22,6 +23,8 @@ public class WeightingProcess {
 			System.exit(1);
 		}
 		try {
+			//Sends the desired commands and receives response
+			while(true){
 			socketController.sendCommand("K 3");
 			waitResponse();
 			socketController.sendCommand("RM20 8 \"Opr Nr?\" \"\" \"&3\"");
@@ -62,6 +65,7 @@ public class WeightingProcess {
 			socketController.sendCommand("S");
 			response = waitResponse();
 			brutto = Double.parseDouble(response.split(" ")[7].replace(',', '.'));
+			// Makes sure that it has been weighted correctly
 			if(tara + netto + brutto == 0) {
 				socketController.sendCommand("P111 \"Afvejning ok");
 				waitResponse();
@@ -69,11 +73,14 @@ public class WeightingProcess {
 				socketController.sendCommand("P111 \"Afvejning ikke ok");
 				waitResponse();
 			}
+			}
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
+			System.out.println("Afvejningsprocessen fejlede.");
 		}
 	}
 
+	// Takes our nextResponse method and adds a wait time of 1 second
 	private String waitResponse() throws IOException, InterruptedException {
 		String response = socketController.nextResponse();
 		while(response == null) {

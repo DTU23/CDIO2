@@ -1,5 +1,7 @@
 package controller;
 
+import java.text.DecimalFormat;
+
 import socket.ISocketController;
 import socket.ISocketObserver;
 import socket.SocketInMessage;
@@ -18,6 +20,13 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 	private ISocketController socketHandler;
 	private IWeightInterfaceController weightController;
 	private KeyState keyState = KeyState.K1;
+	private boolean RM20awaitingResponse = false;
+
+	//input values
+	private double referenceWeight = 0;
+	private double weightOnSlider = 0;
+	private StringBuilder userInput = new StringBuilder();
+
 
 	public MainController(ISocketController socketHandler, IWeightInterfaceController uiController) {
 		this.init(socketHandler, uiController);
@@ -26,7 +35,7 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 	@Override
 	public void init(ISocketController socketHandler, IWeightInterfaceController uiController) {
 		this.socketHandler = socketHandler;
-		this.weightController=uiController;
+		this.weightController = uiController;
 	}
 
 	@Override
@@ -36,8 +45,10 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 			socketHandler.registerObserver(this);
 			//Starts socketHandler in own thread
 			new Thread(socketHandler).start();
-			//TODO set up weightController - Look above for inspiration (Keep it simple ;))
-
+			//Makes this controller interested in messages from the weight
+			weightController.registerObserver(this);
+			//Starts weightController in own thread
+			new Thread(weightController).start();
 
 		} else {
 			System.err.println("No controllers injected!");
@@ -49,80 +60,138 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 	public void notify(SocketInMessage message) {
 		switch (message.getType()) {
 		case B:
+			try {
+				notifyWeightChange(Double.parseDouble(message.getMessage()));
+			} catch (Exception e) {
+				e.printStackTrace();
+				socketHandler.sendMessage(new SocketOutMessage("ES"));
+			}
 			break;
 		case D:
 			weightController.showMessagePrimaryDisplay(message.getMessage()); 
 			break;
 		case Q:
+			System.exit(0);
 			break;
 		case RM204:
+			//TODO Not implemented yet
 			break;
 		case RM208:
+			weightController.showMessagePrimaryDisplay(message.getMessage());
+			RM20awaitingResponse = true;
 			break;
 		case S:
+			socketHandler.sendMessage(new SocketOutMessage("S S      " + new DecimalFormat("#.###").format(weightOnSlider-referenceWeight) + " kg"));
 			break;
 		case T:
+			referenceWeight = weightOnSlider;
+			weightController.showMessagePrimaryDisplay("0.0 kg");
+			socketHandler.sendMessage(new SocketOutMessage("T S      " + new DecimalFormat("#.###").format(referenceWeight) + " kg"));
 			break;
 		case DW:
+			weightController.showMessagePrimaryDisplay(referenceWeight + " kg");
 			break;
 		case K:
-			handleKMessage(message);
+			if(handleKMessage(message)) {
+				socketHandler.sendMessage(new SocketOutMessage("K A"));
+			} else {
+				socketHandler.sendMessage(new SocketOutMessage("ES"));
+			}
 			break;
 		case P111:
+			weightController.showMessageSecondaryDisplay(message.getMessage());
+			break;
+		default:
+			weightController.showMessageSecondaryDisplay(message.getMessage()); 
 			break;
 		}
 
 	}
 
-	private void handleKMessage(SocketInMessage message) {
+	private boolean handleKMessage(SocketInMessage message) {
 		switch (message.getMessage()) {
 		case "1" :
 			this.keyState = KeyState.K1;
-			break;
+			return true;
 		case "2" :
 			this.keyState = KeyState.K2;
-			break;
+			return true;
 		case "3" :
 			this.keyState = KeyState.K3;
-			break;
+			return true;
 		case "4" :
 			this.keyState = KeyState.K4;
-			break;
+			return true;
 		default:
-			socketHandler.sendMessage(new SocketOutMessage("ES"));
-			break;
+			return false;
 		}
 	}
 	//Listening for UI input
 	@Override
 	public void notifyKeyPress(KeyPress keyPress) {
-		//TODO implement logic for handling input from ui
 		switch (keyPress.getType()) {
 		case SOFTBUTTON:
 			break;
 		case TARA:
-			break;
-		case TEXT:
-			break;
-		case ZERO:
-			break;
-		case C:
-			break;
-		case EXIT:
-			break;
-		case SEND:
-			if (keyState.equals(KeyState.K4) || keyState.equals(KeyState.K3) ){
-				socketHandler.sendMessage(new SocketOutMessage("K A 3"));
+			// if in KeyState 1 or 4 the button will work.
+			if(keyState.equals(KeyState.K1) || keyState.equals(KeyState.K4)) {
+				// we save what the weight is when the weight is tared.
+				referenceWeight = weightOnSlider;
+				// the weight displayed is the slider minus the reference which equals 0.0 kg.
+				weightController.showMessagePrimaryDisplay(weightOnSlider - referenceWeight + " kg");
 			}
 			break;
+		case TEXT:
+			// every char that is pressed, is added to a string builder.
+			userInput.append(keyPress.getCharacter());
+			// the current content of the string builder is displayed in the secondary display.
+			weightController.showMessageSecondaryDisplay(userInput.toString());
+			break;
+		case ZERO:
+			// if in KeyState 1 or 4 the button will work.
+			if(keyState.equals(KeyState.K1) || keyState.equals(KeyState.K4)) {
+				// there reference weight is reset to zero.
+				referenceWeight = 0;
+				// the weight in the display is reset to zero aswell.
+				weightController.showMessagePrimaryDisplay(referenceWeight + " kg");
+			}
+			break;
+		case C:
+			// c button is coded to function as a backspace when the button is pressed.
+			userInput.deleteCharAt(userInput.length()-1);
+			// the current content of the string builder is displayed in the secondary display.
+			weightController.showMessageSecondaryDisplay(userInput.toString());
+			break;
+		case EXIT:
+			System.exit(0);
+			break;
+		case SEND:
+			// if an RM20 command is awaiting a response.
+			if(RM20awaitingResponse) {
+				// the content of the string builder will be sent out on the socket.
+				socketHandler.sendMessage(new SocketOutMessage("RM20 A \"" + userInput.toString() + "\""));
+				// the content of the string builder is cleared.
+				userInput.setLength(0);
+				// the current content of the string builder is displayed in the secondary display.
+				weightController.showMessageSecondaryDisplay(userInput.toString());
+				// when the RM20 command has received it's response, it will be set to false until next time it's called
+				RM20awaitingResponse = false;
+				// else if KeyState is 3 or 4 the appropriate acknowledgement is sent out on the socket.
+			} else if (keyState.equals(KeyState.K3)) {
+				socketHandler.sendMessage(new SocketOutMessage("K A 3"));
+			} else if(keyState.equals(KeyState.K4)) {
+				socketHandler.sendMessage(new SocketOutMessage("K A 4"));
+			}
+			// if KeyState is 1 or 2 nothing will happen when the "Send" button is pressed
+			break;
 		}
-
 	}
 
 	@Override
 	public void notifyWeightChange(double newWeight) {
-		// TODO Auto-generated method stub
-
+		// prints the current measurement in the primary display. Which is always what the slider is on minus what has be tared.
+		weightController.showMessagePrimaryDisplay(newWeight - referenceWeight + " kg");
+		// saving last notification to local variable so we can access it when needed.
+		weightOnSlider = newWeight;
 	}
-
 }

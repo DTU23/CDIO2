@@ -55,53 +55,69 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 		}
 	}
 
-	//Listening for socket input
+	// Listening for socket input
 	@Override
 	public void notify(SocketInMessage message) {
+		// Switch-case on the message type that is recieved (from SocketController)
 		switch (message.getType()) {
-		case B:
+		case B: // Set the load
 			try {
+				// Parsing the message to a double - and changing it in the user interface
 				notifyWeightChange(Double.parseDouble(message.getMessage()));
 			} catch (Exception e) {
+				// In fact we catch an exception we write a error message to the output stream
 				e.printStackTrace();
 				socketHandler.sendMessage(new SocketOutMessage("ES"));
 			}
 			break;
 		case D:
+			// Display a message in the primary display
 			weightController.showMessagePrimaryDisplay(message.getMessage()); 
 			break;
 		case Q:
+			// Exit the program
 			System.exit(0);
 			break;
 		case RM204:
 			//TODO Not implemented yet
 			break;
 		case RM208:
+			// Display a message in the secondary display and wait for response
 			weightController.showMessagePrimaryDisplay(message.getMessage());
 			RM20awaitingResponse = true;
 			break;
 		case S:
+			// When requested the current load is written to the output stream
 			socketHandler.sendMessage(new SocketOutMessage("S S      " + new DecimalFormat("#.###").format(weightOnSlider-referenceWeight) + " kg"));
 			break;
 		case T:
+			// Save the current load temporarily
 			referenceWeight = weightOnSlider;
+			// Reset the primary display
 			weightController.showMessagePrimaryDisplay("0.0 kg");
+			// Write the load to the output stream
 			socketHandler.sendMessage(new SocketOutMessage("T S      " + new DecimalFormat("#.###").format(referenceWeight) + " kg"));
 			break;
 		case DW:
+			// Clear primary display
 			weightController.showMessagePrimaryDisplay(referenceWeight + " kg");
 			break;
 		case K:
+			// Change the key type
 			if(handleKMessage(message)) {
+				// Acknowledge message written to output stream
 				socketHandler.sendMessage(new SocketOutMessage("K A"));
 			} else {
+				// Error message written to the output stream
 				socketHandler.sendMessage(new SocketOutMessage("ES"));
 			}
 			break;
 		case P111:
+			// Print message in the secondary display
 			weightController.showMessageSecondaryDisplay(message.getMessage());
 			break;
 		default:
+			// Default case - write something in the secondary display
 			weightController.showMessageSecondaryDisplay(message.getMessage()); 
 			break;
 		}

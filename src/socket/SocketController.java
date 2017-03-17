@@ -31,13 +31,13 @@ public class SocketController implements ISocketController {
 	@Override
 	public void sendMessage(SocketOutMessage message) {
 		try {
-			//TODO send something over the socket!
+			// Write message to output stream and flush it
 			outStream.writeBytes(message.getMessage() + "\r\n");
 			outStream.flush();
 		} catch (IOException e) {
-			//TODO maybe tell someone that connection is closed?
-			e.printStackTrace();
+			// Notify MainController that something is wrong
 			notifyObservers(new SocketInMessage(SocketMessageType.Error, "No socket is connected!"));
+			e.printStackTrace();
 		}
 	}
 
@@ -51,9 +51,7 @@ public class SocketController implements ISocketController {
 		} catch (IOException e1) {
 			notifyObservers(new SocketInMessage(SocketMessageType.Error, "Could not establish connection to the cloud!"));
 			e1.printStackTrace();
-		} 
-
-
+		}
 	}
 
 	private void waitForConnections(ServerSocket listeningSocket) {
@@ -62,29 +60,29 @@ public class SocketController implements ISocketController {
 			inStream = new BufferedReader(new InputStreamReader(activeSocket.getInputStream()));
 			outStream = new DataOutputStream(activeSocket.getOutputStream());
 			String inLine;
-			//.readLine is a blocking call 
-			//TODO How do you handle simultaneous input and output on socket?
-			//TODO this only allows for one open connection - how would you handle multiple connections?
+			//.readLine is a blocking call
 			while (true){
 				inLine = inStream.readLine();
 				System.out.println(inLine);
+				// If there's nothing from input stream, then just break loop
 				if (inLine==null) break;
+				// Switch-case based on the first part of the message
 				switch (inLine.split(" ")[0]) {
+				// Almost every case contains either notifyObservers(), sendMessage() or both, therefore they are only commented in the two first cases.
 				case "RM20": // Display a message in the secondary display and wait for response
-					notifyObservers(new SocketInMessage(SocketMessageType.RM208, inLine.substring(8)));
-					sendMessage(new SocketOutMessage("RM20 B"));
-					//TODO implement logic for RM command
+					notifyObservers(new SocketInMessage(SocketMessageType.RM208, inLine.substring(8))); // Pass on the message type and rest of the string message
+					sendMessage(new SocketOutMessage("RM20 B")); // Send "RM20 B" to the output stream
 					break;
 				case "D": // Display a message in the primary display
 					try {
-						notifyObservers(new SocketInMessage(SocketMessageType.D, inLine.substring(2)));
-						sendMessage(new SocketOutMessage("D A"));
+						notifyObservers(new SocketInMessage(SocketMessageType.D, inLine.substring(2))); // Pass on the message type and rest of the string message
+						sendMessage(new SocketOutMessage("D A")); // Send "D A" to the output stream
 					} catch (IndexOutOfBoundsException e) {
 						e.printStackTrace();
-						sendMessage(new SocketOutMessage("ES"));
+						sendMessage(new SocketOutMessage("ES")); // If the message not long enough, then "ES" will be returned as error message
 					}
 					break;
-				case "DW": //Clear primary display
+				case "DW": // Clear primary display
 					notifyObservers(new SocketInMessage(SocketMessageType.DW, null));
 					sendMessage(new SocketOutMessage("DW A"));
 					break;
@@ -103,10 +101,9 @@ public class SocketController implements ISocketController {
 				case "S": // Request the current load
 					notifyObservers(new SocketInMessage(SocketMessageType.S, null));
 					break;
-				case "K":
+				case "K": // Change key-type
 					if (inLine.split(" ").length>1){
 						notifyObservers(new SocketInMessage(SocketMessageType.K, inLine.split(" ")[1]));
-						//TODO skal evt. være index 2, afhængigt af om kommandoen er "K C x".
 					}
 					break;
 				case "B": // Set the load
@@ -121,12 +118,13 @@ public class SocketController implements ISocketController {
 				case "Q": // Quit
 					notifyObservers(new SocketInMessage(SocketMessageType.Q, null));
 					break;
-				default: //Something went wrong?
+				default: // Something went wrong?
 					sendMessage(new SocketOutMessage("ES"));
 					break;
 				}
 			}
 		} catch (IOException e) {
+			// In fact we run into an IOException, notify MainController that something is wrong
 			notifyObservers(new SocketInMessage(SocketMessageType.Error, "Problems with internet connection"));
 			e.printStackTrace();
 		}

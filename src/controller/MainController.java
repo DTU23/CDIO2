@@ -100,7 +100,7 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 			break;
 		case DW:
 			// Clear primary display
-			weightController.showMessagePrimaryDisplay(referenceWeight + " kg");
+			weightController.showMessagePrimaryDisplay(weightOnSlider-referenceWeight + " kg");
 			break;
 		case K:
 			// Change the key type
@@ -194,9 +194,9 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 				RM20awaitingResponse = false;
 				// else if KeyState is 3 or 4 the appropriate acknowledgement is sent out on the socket.
 			} else if (keyState.equals(KeyState.K3)) {
-				socketHandler.sendMessage(new SocketOutMessage("K A 3"));
+				socketHandler.sendMessage(new SocketOutMessage("K C 4"));
 			} else if(keyState.equals(KeyState.K4)) {
-				socketHandler.sendMessage(new SocketOutMessage("K A 4"));
+				socketHandler.sendMessage(new SocketOutMessage("K B 3"));
 			}
 			// if KeyState is 1 or 2 nothing will happen when the "Send" button is pressed
 			break;

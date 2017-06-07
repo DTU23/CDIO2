@@ -88,10 +88,10 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 			break;
 		case S:
 			// When requested the current load is written to the output stream
-			if(weightOnSlider-referenceWeight >= 0) {
-				socketHandler.sendMessage(new SocketOutMessage("S S      " + new DecimalFormat("0.000").format(weightOnSlider-referenceWeight).replace(',', '.') + " kg"));
-			} else {
+			if(weightOnSlider-referenceWeight < 0) {
 				socketHandler.sendMessage(new SocketOutMessage("S S     " + new DecimalFormat("0.000").format(weightOnSlider-referenceWeight).replace(',', '.') + " kg"));
+			} else {
+				socketHandler.sendMessage(new SocketOutMessage("S S      " + new DecimalFormat("0.000").format(weightOnSlider-referenceWeight).replace(',', '.') + " kg"));
 			}
 			break;
 		case T:
@@ -100,16 +100,15 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 			// Reset the primary display
 			weightController.showMessagePrimaryDisplay("0.000 kg");
 			// Write the load to the output stream
-			if (referenceWeight >= 0) {
-				socketHandler.sendMessage(new SocketOutMessage("T S      " + new DecimalFormat("0.000").format(referenceWeight).replace(',', '.') + " kg"));
-			} else {
+			if (referenceWeight < 0) {
 				socketHandler.sendMessage(new SocketOutMessage("T S     " + new DecimalFormat("0.000").format(referenceWeight).replace(',', '.') + " kg"));
+			} else {
+				socketHandler.sendMessage(new SocketOutMessage("T S      " + new DecimalFormat("0.000").format(referenceWeight).replace(',', '.') + " kg"));	
 			}
-			
 			break;
 		case DW:
 			// Clear primary display
-			weightController.showMessagePrimaryDisplay(weightOnSlider-referenceWeight + " kg");
+			weightController.showMessagePrimaryDisplay(new DecimalFormat("0.000").format(weightOnSlider-referenceWeight).replace(',', '.') + " kg");
 			break;
 		case K:
 			// Change the key type
@@ -163,7 +162,7 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 				// we save what the weight is when the weight is tared.
 				referenceWeight = weightOnSlider;
 				// the weight displayed is the slider minus the reference which equals 0.0 kg.
-				weightController.showMessagePrimaryDisplay(weightOnSlider - referenceWeight + " kg");
+				weightController.showMessagePrimaryDisplay(new DecimalFormat("0.000").format(weightOnSlider-referenceWeight).replace(',', '.') + " kg");
 			}
 			break;
 		case TEXT:
@@ -178,7 +177,7 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 				// there reference weight is reset to zero.
 				referenceWeight = 0;
 				// the weight in the display is reset to zero aswell.
-				weightController.showMessagePrimaryDisplay(referenceWeight + " kg");
+				weightController.showMessagePrimaryDisplay(new DecimalFormat("0.000").format(referenceWeight).replace(',', '.') + " kg");
 			}
 			break;
 		case C:
@@ -215,7 +214,7 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 	@Override
 	public void notifyWeightChange(double newWeight) {
 		// prints the current measurement in the primary display. Which is always what the slider is on minus what has be tared.
-		weightController.showMessagePrimaryDisplay(newWeight - referenceWeight + " kg");
+		weightController.showMessagePrimaryDisplay(new DecimalFormat("0.000").format(newWeight - referenceWeight).replace(',', '.') + " kg");
 		// saving last notification to local variable so we can access it when needed.
 		weightOnSlider = newWeight;
 	}

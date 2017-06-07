@@ -88,15 +88,24 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 			break;
 		case S:
 			// When requested the current load is written to the output stream
-			socketHandler.sendMessage(new SocketOutMessage("S S      " + new DecimalFormat("#.###").format(weightOnSlider-referenceWeight) + " kg"));
+			if(weightOnSlider-referenceWeight >= 0) {
+				socketHandler.sendMessage(new SocketOutMessage("S S      " + new DecimalFormat("0.000").format(weightOnSlider-referenceWeight).replace(',', '.') + " kg"));
+			} else {
+				socketHandler.sendMessage(new SocketOutMessage("S S     " + new DecimalFormat("0.000").format(weightOnSlider-referenceWeight).replace(',', '.') + " kg"));
+			}
 			break;
 		case T:
 			// Save the current load temporarily
 			referenceWeight = weightOnSlider;
 			// Reset the primary display
-			weightController.showMessagePrimaryDisplay("0.0 kg");
+			weightController.showMessagePrimaryDisplay("0.000 kg");
 			// Write the load to the output stream
-			socketHandler.sendMessage(new SocketOutMessage("T S      " + new DecimalFormat("#.###").format(referenceWeight) + " kg"));
+			if (referenceWeight >= 0) {
+				socketHandler.sendMessage(new SocketOutMessage("T S      " + new DecimalFormat("0.000").format(referenceWeight).replace(',', '.') + " kg"));
+			} else {
+				socketHandler.sendMessage(new SocketOutMessage("T S     " + new DecimalFormat("0.000").format(referenceWeight).replace(',', '.') + " kg"));
+			}
+			
 			break;
 		case DW:
 			// Clear primary display

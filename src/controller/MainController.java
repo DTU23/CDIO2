@@ -88,19 +88,27 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 			break;
 		case S:
 			// When requested the current load is written to the output stream
-			socketHandler.sendMessage(new SocketOutMessage("S S      " + new DecimalFormat("#.###").format(weightOnSlider-referenceWeight) + " kg"));
+			if(weightOnSlider-referenceWeight < 0) {
+				socketHandler.sendMessage(new SocketOutMessage("S S     " + new DecimalFormat("0.000").format(weightOnSlider-referenceWeight).replace(',', '.') + " kg"));
+			} else {
+				socketHandler.sendMessage(new SocketOutMessage("S S      " + new DecimalFormat("0.000").format(weightOnSlider-referenceWeight).replace(',', '.') + " kg"));
+			}
 			break;
 		case T:
 			// Save the current load temporarily
 			referenceWeight = weightOnSlider;
 			// Reset the primary display
-			weightController.showMessagePrimaryDisplay("0.0 kg");
+			weightController.showMessagePrimaryDisplay("0.000 kg");
 			// Write the load to the output stream
-			socketHandler.sendMessage(new SocketOutMessage("T S      " + new DecimalFormat("#.###").format(referenceWeight) + " kg"));
+			if (referenceWeight < 0) {
+				socketHandler.sendMessage(new SocketOutMessage("T S     " + new DecimalFormat("0.000").format(referenceWeight).replace(',', '.') + " kg"));
+			} else {
+				socketHandler.sendMessage(new SocketOutMessage("T S      " + new DecimalFormat("0.000").format(referenceWeight).replace(',', '.') + " kg"));	
+			}
 			break;
 		case DW:
 			// Clear primary display
-			weightController.showMessagePrimaryDisplay(referenceWeight + " kg");
+			weightController.showMessagePrimaryDisplay(new DecimalFormat("0.000").format(weightOnSlider-referenceWeight).replace(',', '.') + " kg");
 			break;
 		case K:
 			// Change the key type
@@ -154,7 +162,7 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 				// we save what the weight is when the weight is tared.
 				referenceWeight = weightOnSlider;
 				// the weight displayed is the slider minus the reference which equals 0.0 kg.
-				weightController.showMessagePrimaryDisplay(weightOnSlider - referenceWeight + " kg");
+				weightController.showMessagePrimaryDisplay(new DecimalFormat("0.000").format(weightOnSlider-referenceWeight).replace(',', '.') + " kg");
 			}
 			break;
 		case TEXT:
@@ -169,7 +177,7 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 				// there reference weight is reset to zero.
 				referenceWeight = 0;
 				// the weight in the display is reset to zero aswell.
-				weightController.showMessagePrimaryDisplay(referenceWeight + " kg");
+				weightController.showMessagePrimaryDisplay(new DecimalFormat("0.000").format(referenceWeight).replace(',', '.') + " kg");
 			}
 			break;
 		case C:
@@ -194,9 +202,9 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 				RM20awaitingResponse = false;
 				// else if KeyState is 3 or 4 the appropriate acknowledgement is sent out on the socket.
 			} else if (keyState.equals(KeyState.K3)) {
-				socketHandler.sendMessage(new SocketOutMessage("K A 3"));
+				socketHandler.sendMessage(new SocketOutMessage("K C 4"));
 			} else if(keyState.equals(KeyState.K4)) {
-				socketHandler.sendMessage(new SocketOutMessage("K A 4"));
+				socketHandler.sendMessage(new SocketOutMessage("K B 3"));
 			}
 			// if KeyState is 1 or 2 nothing will happen when the "Send" button is pressed
 			break;
@@ -206,7 +214,7 @@ public class MainController implements IMainController, ISocketObserver, IWeight
 	@Override
 	public void notifyWeightChange(double newWeight) {
 		// prints the current measurement in the primary display. Which is always what the slider is on minus what has be tared.
-		weightController.showMessagePrimaryDisplay(newWeight - referenceWeight + " kg");
+		weightController.showMessagePrimaryDisplay(new DecimalFormat("0.000").format(newWeight - referenceWeight).replace(',', '.') + " kg");
 		// saving last notification to local variable so we can access it when needed.
 		weightOnSlider = newWeight;
 	}

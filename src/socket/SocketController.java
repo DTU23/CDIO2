@@ -70,12 +70,12 @@ public class SocketController implements ISocketController {
 				switch (inLine.split(" ")[0]) {
 				// Almost every case contains either notifyObservers(), sendMessage() or both, therefore they are only commented in the two first cases.
 				case "RM20": // Display a message in the secondary display and wait for response
-					notifyObservers(new SocketInMessage(SocketMessageType.RM208, inLine.substring(8))); // Pass on the message type and rest of the string message
+					notifyObservers(new SocketInMessage(SocketMessageType.RM208, inLine.split("\"")[1])); // Pass on the message type and rest of the string message
 					sendMessage(new SocketOutMessage("RM20 B")); // Send "RM20 B" to the output stream
 					break;
 				case "D": // Display a message in the primary display
 					try {
-						notifyObservers(new SocketInMessage(SocketMessageType.D, inLine.substring(2))); // Pass on the message type and rest of the string message
+						notifyObservers(new SocketInMessage(SocketMessageType.D, inLine.substring(3, inLine.length()-1))); // Pass on the message type and rest of the string message
 						sendMessage(new SocketOutMessage("D A")); // Send "D A" to the output stream
 					} catch (IndexOutOfBoundsException e) {
 						e.printStackTrace();
@@ -88,7 +88,7 @@ public class SocketController implements ISocketController {
 					break;
 				case "P111": //Show something in secondary display
 					try {
-						notifyObservers(new SocketInMessage(SocketMessageType.P111, inLine.substring(5)));
+						notifyObservers(new SocketInMessage(SocketMessageType.P111, inLine.substring(6, inLine.length()-1)));
 						sendMessage(new SocketOutMessage("P111 A"));
 					} catch (IndexOutOfBoundsException e) {
 						e.printStackTrace();
